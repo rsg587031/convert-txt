@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일괄 텍스트 파일 편집기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #c7d2fe 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: #1e293b;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        button, .file-upload-label {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-upload {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-upload:hover {
+            background: #4338ca;
+        }
+
+        .btn-replace {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-replace:hover {
+            background: #15803d;
+        }
+
+        .btn-download-all {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-download-all:hover {
+            background: #1d4ed8;
+        }
+
+        .file-count {
+            margin-top: 1rem;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .file-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .file-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-reset {
+            background: #eab308;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #ca8a04;
+        }
+
+        .btn-download {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #2563eb;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .file-status {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .modified {
+            color: #ea580c;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        .empty-text {
+            color: #64748b;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-subtext {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 일괄 텍스트 파일 편집기</h1>
+            <p class="subtitle">여러 텍스트 파일을 동시에 업로드하고 편집하세요</p>
+            
+            <div class="button-group">
+                <label class="file-upload-label btn-upload">
+                    📤 파일 업로드
+                    <input type="file" id="fileInput" multiple accept=".txt,.md,.log,.json,.csv">
+                </label>
+                
+                <button id="batchReplaceBtn" class="btn-replace hidden">
+                    💾 일괄 찾기/바꾸기
+                </button>
+                
+                <button id="downloadAllBtn" class="btn-download-all hidden">
+                    📥 전체 다운로드
+                </button>
+            </div>
+
+            <div id="fileCount" class="file-count hidden"></div>
+        </div>
+
+        <div id="filesContainer"></div>
+
+        <div id="emptyState" class="empty-state">
+            <div class="empty-icon">📤</div>
+            <p class="empty-text">파일을 업로드하여 시작하세요</p>
+            <p class="empty-subtext">.txt, .md, .log, .json, .csv 파일을 지원합니다</p>
+        </div>
+    </div>
+
+    <script>
+        var files = [];
+
+        var fileInput = document.getElementById('fileInput');
+        var filesContainer = document.getElementById('filesContainer');
+        var emptyState = document.getElementById('emptyState');
+        var fileCount = document.getElementById('fileCount');
+        var batchReplaceBtn = document.getElementById('batchReplaceBtn');
+        var downloadAllBtn = document.getElementById('downloadAllBtn');
+
+        fileInput.addEventListener('change', handleFileUpload);
+        batchReplaceBtn.addEventListener('click', batchReplace);
+        downloadAllBtn.addEventListener('click', downloadAllFiles);
+
+        function handleFileUpload(e) {
+            var uploadedFiles = Array.from(e.target.files);
+            
+            uploadedFiles.forEach(function(file) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    var fileObj = {
+                        id: Date.now() + Math.random(),
+                        name: file.name,
+                        originalContent: event.target.result,
+                        content: event.target.result
+                    };
+                    files.push(fileObj);
+                    renderFiles();
+                };
+                reader.readAsText(file);
+            });
+            
+            e.target.value = '';
+        }
+
+        function renderFiles() {
+            if (files.length === 0) {
+                emptyState.classList.remove('hidden');
+                fileCount.classList.add('hidden');
+                batchReplaceBtn.classList.add('hidden');
+                downloadAllBtn.classList.add('hidden');
+                filesContainer.innerHTML = '';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            fileCount.classList.remove('hidden');
+            batchReplaceBtn.classList.remove('hidden');
+            downloadAllBtn.classList.remove('hidden');
+            fileCount.textContent = '총 ' + files.length + '개 파일 로드됨';
+
+            filesContainer.innerHTML = files.map(function(file) {
+                var modifiedText = file.content !== file.originalContent ? '<span class="modified">● 수정됨</span>' : '';
+                return '<div class="file-card" data-id="' + file.id + '">' +
+                    '<div class="file-header">' +
+                        '<div class="file-name">📄 ' + file.name + '</div>' +
+                        '<div class="file-actions">' +
+                            '<button class="btn-small btn-reset" onclick="resetFile(' + file.id + ')">되돌리기</button>' +
+                            '<button class="btn-small btn-download" onclick="downloadFile(' + file.id + ')">📥</button>' +
+                            '<button class="btn-small btn-delete" onclick="deleteFile(' + file.id + ')">🗑️</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<textarea id="textarea-' + file.id + '" oninput="updateContent(' + file.id + ', this.value)">' + file.content + '</textarea>' +
+                    '<div class="file-status">' + modifiedText + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function updateContent(id, newContent) {
+            var file = files.find(function(f) { return f.id === id; });
+            if (file) {
+                file.content = newContent;
+                renderFiles();
+            }
+        }
+
+        function deleteFile(id) {
+            files = files.filter(function(f) { return f.id !== id; });
+            renderFiles();
+        }
+
+        function resetFile(id) {
+            var file = files.find(function(f) { return f.id === id; });
+            if (file) {
+                file.content = file.originalContent;
+                renderFiles();
+            }
+        }
+
+        function downloadFile(id) {
+            var file = files.find(function(f) { return f.id === id; });
+            if (file) {
+                var blob = new Blob([file.content], { type: 'text/plain' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function downloadAllFiles() {
+            files.forEach(function(file) {
+                downloadFile(file.id);
+            });
+        }
+
+        function batchReplace() {
+            var findText = prompt('찾을 텍스트를 입력하세요:');
+            if (!findText) return;
+            
+            var replaceText = prompt('바꿀 텍스트를 입력하세요:');
+            if (replaceText === null) return;
+            
+            files.forEach(function(file) {
+                file.content = file.content.split(findText).join(replaceText);
+            });
+            
+            renderFiles();
+        }
+    </script>
+</body>
+</html>
